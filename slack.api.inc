@@ -18,7 +18,7 @@
  * @return bool|object
  *   Slack response.
  */
-function slack_send_message($message, $channel = '', $username = '') {
+function slack_send_message($message, $channel = '', $username = '', $message_options = NULL) {
   $team_name = variable_get('slack_team', '');
   if (!$team_name) {
     drupal_set_message('no team name');
@@ -29,13 +29,11 @@ function slack_send_message($message, $channel = '', $username = '') {
     drupal_set_message('no webhook url');
     return FALSE;
   }
-
-  $message_options = array();
   if ($channel) {
-    $message_options['channel'] = $channel;
+    $message_options->channel = $channel;
   }
   if ($username) {
-    $message_options['username'] = $username;
+    $message_options->username = $username;
   }
   $result = _slack_send_message($team_name, $webhook_url, $message, $message_options);
   return $result;
@@ -67,7 +65,7 @@ function _slack_send_message($team_name, $webhook_url, $message, $message_option
   $headers = array(
     'Content-Type' => 'application/x-www-form-urlencoded',
   );
-  $message_options['text'] = $message;
+
   $sending_data = 'payload=' . json_encode($message_options);
   $result = drupal_http_request($webhook_url, $headers, 'POST', $sending_data);
   return $result;

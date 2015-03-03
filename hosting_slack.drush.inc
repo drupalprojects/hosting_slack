@@ -25,9 +25,19 @@ function drush_hosting_slack_pre_hosting_task() {
   $username = variable_get('slack_username', '');
 
   if ($triggers['start']) {
-    slack_send_message(t('Task started: [!title](!url)', array(
+
+    $message_text = t('<!url|!title>', array(
       '!title' => $task->title,
       '!url' => url("node/$task->nid", array('absolute' => TRUE)),
-    ), $channel, $username));
+    ));
+    $message_options = new stdClass();
+    $message_options->text = t('Task Started:');
+    $message_options->attachments = array();
+    $message_options->attachments[0] = new stdClass();
+    $message_options->attachments[0]->fallback = $message_text;
+    $message_options->attachments[0]->text = $message_text;
+    $message_options->attachments[0]->color = '#777';
+
+    slack_send_message($message_text, $channel, $username, $message_options);
   }
 }
