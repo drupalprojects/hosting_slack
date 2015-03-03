@@ -1,0 +1,6 @@
+name = Hosting Slack
+description = Provides Slack notifications for hosting task start and completion.
+core = 6.x
+package = Hosting
+
+dependencies[] = hosting_task
