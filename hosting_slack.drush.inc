@@ -59,7 +59,6 @@ function drush_hosting_slack_post_hosting_task() {
   $username = variable_get('slack_username', '');
 
   if ($triggers['stop']) {
-    drush_log(print_r($task, 1), 'ok');
 
     $message_text = t('!status <!url|!title>', array(
       '!status' => _hosting_parse_error_code($task->task_status),
