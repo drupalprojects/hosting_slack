@@ -35,6 +35,40 @@ function slack_configure_form() {
     '#description' => t('What would you like to name your Slack bot?'),
     '#default_value' => variable_get('slack_username', ''),
   );
+  $form['tasks'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Hosting Task Notifications'),
+  );
+  $options = array();
+  $tasks = hosting_available_tasks();
+  $tasks = array_merge(
+    $tasks['site'],
+    $tasks['server'],
+    $tasks['project'],
+    $tasks['platform']
+  );
+
+  foreach ($tasks as $task_type => $task) {
+    $options[$task_type] = $task['title'];
+  }
+
+  $form['tasks']['slack_hosting_tasks_triggers'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Task Triggers'),
+    '#options' => array(
+      'start' => t('Start of task'),
+      'stop' => t('End of task'),
+    ),
+    '#default_value' => variable_get('slack_hosting_tasks_triggers', array()),
+  );
+  $form['tasks']['slack_hosting_tasks'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Hosting Task Types'),
+    '#options' => $options,
+    '#descriptions' => t('Select the task types that will trigger a slack notification.'),
+    '#default_value' => variable_get('slack_hosting_tasks', array()),
+  );
+
   return system_settings_form($form);
 }
 
