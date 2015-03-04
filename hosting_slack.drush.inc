@@ -1,11 +1,12 @@
 <?php
 
+function hosting_slack_drush_init() {
+}
+
 /**
  * Implements drush_HOOK_pre_COMMAND()
  */
 function drush_hosting_slack_pre_hosting_task() {
-
-  drush_log('HELLO DRUSH!', 'ok');
 
   $task =& drush_get_context('HOSTING_TASK');
 
@@ -17,24 +18,39 @@ function drush_hosting_slack_pre_hosting_task() {
   }
 
   $triggers = variable_get('slack_hosting_tasks_triggers', array());
-  $channel = variable_get('slack_channel', '');
-  $username = variable_get('slack_username', '');
 
   if ($triggers['start']) {
 
-    $message_text = t('<!url|!title>', array(
+    $message_text =  t('Task Started: <!url|!title>', array(
       '!title' => $task->title,
       '!url' => url("node/$task->nid", array('absolute' => TRUE)),
     ));
     $message_options = new stdClass();
-    $message_options->text = t('Task Started:');
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
-    $message_options->attachments[0]->fallback = $message_text;
-    $message_options->attachments[0]->text = $message_text;
+    $message_options->attachments[0]->fallback = 'TASK OPTIONS GO HERE?';
     $message_options->attachments[0]->color = '#777';
+    $message_options->attachments[0]->fields = array();
 
-    slack_send_message($message_text, $channel, $username, $message_options);
+    // Render task args as slackbot "fields"
+    foreach ($task->task_args as $name => $value) {
+
+      if ($value == '0') {
+        $value = 'no';
+      }
+      if ($value == '1') {
+        $value = 'yes';
+      }
+
+      $field = new stdClass();
+      $field->title = $name;
+      $field->value = $value;
+      $field->short = TRUE;
+
+      $message_options->attachments[0]->fields[] = $field;
+    }
+
+    slack_send_message($message_text, $message_options);
   }
 }
 

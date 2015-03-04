@@ -18,7 +18,7 @@
  * @return bool|object
  *   Slack response.
  */
-function slack_send_message($message, $channel = '', $username = '', $message_options = NULL) {
+function slack_send_message($message, $message_options = NULL) {
   $team_name = variable_get('slack_team', '');
   if (!$team_name) {
     drupal_set_message('no team name');
@@ -29,14 +29,15 @@ function slack_send_message($message, $channel = '', $username = '', $message_op
     drupal_set_message('no webhook url');
     return FALSE;
   }
-  if ($channel) {
-    $message_options->channel = $channel;
-  }
-  if ($username) {
-    $message_options->username = $username;
-  }
   $result = _slack_send_message($team_name, $webhook_url, $message, $message_options);
-  return $result;
+
+  if ($result->code != 200){
+    watchdog('hosting_slack', 'Slack POST unsuccessful: ' . $result->data);
+    return FALSE;
+  }
+  else {
+    return TRUE;
+  }
 }
 
 /**
@@ -61,10 +62,15 @@ function slack_send_message($message, $channel = '', $username = '', $message_op
  *     - code:                200        404           500
  *     - error:               -          Not found     Server Error
  */
-function _slack_send_message($team_name, $webhook_url, $message, $message_options = array()) {
+function _slack_send_message($team_name, $webhook_url, $message, $message_options = NULL) {
   $headers = array(
     'Content-Type' => 'application/x-www-form-urlencoded',
   );
+
+  if ($message_options == NULL) {
+    $message_options = new stdClass();
+  }
+  $message_options->text = $message;
 
   $sending_data = 'payload=' . json_encode($message_options);
   $result = drupal_http_request($webhook_url, $headers, 'POST', $sending_data);
