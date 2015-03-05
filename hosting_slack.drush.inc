@@ -43,8 +43,7 @@ function drush_hosting_slack_pre_hosting_task() {
       $field->title = $name;
       $field->value = $value;
       $field->short = TRUE;
-
-      $message_options->attachments[0]->fields[] = $field;
+      $message_options->attachments[0]->fields[$name] = $field;
     }
     slack_send_message('', $message_options);
   }
