@@ -79,14 +79,14 @@ function hosting_slack_hosting_task_update_status($task, $status) {
     $message_options->attachments[0]->color = hosting_task_color($status);
 
     $field = new stdClass();
-    $field->title = 'Started';
-    $field->value = format_date($task->executed);
+    $field->title = 'Duration';
+    $field->value = format_interval($task->delta);
     $field->short = TRUE;
     $message_options->attachments[0]->fields[] = $field;
 
     $field = new stdClass();
-    $field->title = 'Duration';
-    $field->value = format_interval($task->delta);
+    $field->title = 'Started';
+    $field->value = format_date($task->executed);
     $field->short = TRUE;
     $message_options->attachments[0]->fields[] = $field;
 
