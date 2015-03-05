@@ -17,7 +17,11 @@ function drush_hosting_slack_pre_hosting_task() {
 
   if ($triggers['start']) {
 
-    $message = t('Task Started: *!date*', array('!date' => format_date($task->executed)));
+    $tasks = hosting_available_tasks();
+    $message = t('!type Task Started: *!date*', array(
+      '!date' => format_date($task->executed),
+      '!type' => $tasks[$task->task_type]['title'],
+    ));
     $message_options = new stdClass();
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
@@ -28,25 +32,27 @@ function drush_hosting_slack_pre_hosting_task() {
     $message_options->attachments[0]->color = hosting_task_color($task->task_status);
 
     // Render task args as slackbot "fields"
-    foreach ($task->task_args as $name => $value) {
+    if (is_array($task->task_args)) {
+      foreach ($task->task_args as $name => $value) {
 
-      if (empty($value)) {
-        continue;
-      }
-      if ($value == '0') {
-        $value = 'no';
-      }
-      if ($value == '1') {
-        $value = 'yes';
-      }
+        if (empty($value)) {
+          continue;
+        }
+        if ($value == '0') {
+          $value = 'no';
+        }
+        if ($value == '1') {
+          $value = 'yes';
+        }
 
-      $field = new stdClass();
-      $field->title = $name;
-      $field->value = $value;
-      $field->short = TRUE;
-      $message_options->attachments[0]->fields[$name] = $field;
+        $field = new stdClass();
+        $field->title = $name;
+        $field->value = $value;
+        $field->short = TRUE;
+        $message_options->attachments[0]->fields[$name] = $field;
+      }
+      slack_send_message('', $message_options);
     }
-    slack_send_message('', $message_options);
   }
 }
 
@@ -63,15 +69,17 @@ function hosting_slack_hosting_task_update_status($task, $status) {
 
   $triggers = array_filter(variable_get('slack_hosting_tasks_triggers', array()));
   if ($triggers['stop']) {
-    $status_text = _hosting_parse_error_code($status);
-    $message_text =  t('Task Completed: !status', array(
-      '!status' => "`{$status_text}`",
+    $tasks = hosting_available_tasks();
+    $message_text = t('!type Task Ended: !status !date', array(
+      '!date' => format_date($task->executed),
+      '!type' => $tasks[$task->task_type]['title'],
+      '!status' => _hosting_parse_error_code($status),
     ));
     $message_options = new stdClass();
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
     $message_options->attachments[0]->fallback = t('Task Completed: !status', array(
-      '!status' => $status_text,
+      '!status' => _hosting_parse_error_code($status),
     ));
     $message_options->attachments[0]->title = $task->title;
     $message_options->attachments[0]->text = $message_text;
