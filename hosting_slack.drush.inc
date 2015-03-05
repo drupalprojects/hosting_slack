@@ -29,6 +29,9 @@ function drush_hosting_slack_pre_hosting_task() {
     // Render task args as slackbot "fields"
     foreach ($task->task_args as $name => $value) {
 
+      if (empty($value)) {
+        continue;
+      }
       if ($value == '0') {
         $value = 'no';
       }
