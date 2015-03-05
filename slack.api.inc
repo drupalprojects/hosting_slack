@@ -29,6 +29,10 @@ function slack_send_message($message, $message_options = NULL) {
     drupal_set_message('no webhook url');
     return FALSE;
   }
+
+  // Invoke hook_hosting_slack_message_alter()
+  drupal_alter('hosting_slack_message', $message_options);
+
   $result = _slack_send_message($team_name, $webhook_url, $message, $message_options);
 
   if ($result->code != 200){

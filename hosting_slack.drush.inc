@@ -91,8 +91,6 @@ function hosting_slack_hosting_task_update_status($task, $status) {
     $field->short = TRUE;
     $message_options->attachments[0]->fields[] = $field;
 
-    // Invoke hook_hosting_slack_message_alter()
-    drupal_alter('hosting_slack_message', $message_options);
     slack_send_message('', $message_options);
   }
 }
