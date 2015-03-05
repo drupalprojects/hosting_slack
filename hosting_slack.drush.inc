@@ -51,34 +51,46 @@ function drush_hosting_slack_pre_hosting_task() {
 }
 
 /**
- * Implements drush_HOOK_pre_COMMAND()
+ * Implements hook_hosting_task_update_status()
  */
-function hosting_slack_post_hosting_task($task, $data) {
+function hosting_slack_hosting_task_update_status($task, $status) {
 
-  drush_log('HELLO DRUSH!', 'ok');
-
-  $enabled_tasks = variable_get('slack_hosting_tasks', array());
-
-  if (!in_array($task->task_type, $enabled_tasks)){
+  $enabled_tasks = array_filter(variable_get('slack_hosting_tasks', array()));
+  if (!isset($enabled_tasks[$task->task_type])){
     drush_log('Task type not configured to send notification.', 'ok');
     return;
   }
 
-  $triggers = variable_get('slack_hosting_tasks_triggers', array());
+  $triggers = array_filter(variable_get('slack_hosting_tasks_triggers', array()));
   if ($triggers['stop']) {
-
-    $message_text =  t('Task Complete: !status <!url|!title>', array(
-      '!status' => _hosting_parse_error_code($task->task_status),
-      '!title' => $task->title,
-      '!url' => url("node/$task->nid", array('absolute' => TRUE)),
+    $color = hosting_task_color($status);
+    $status_text = _hosting_parse_error_code($status);
+    $message_text =  t('Task Completed: !status', array(
+      '!status' => "`{$status_text}`",
     ));
     $message_options = new stdClass();
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
-    $message_options->attachments[0]->fallback = $message_text;
-    $message_options->attachments[0]->text = 'Details? ' . print_r($task, 1);;
-    $message_options->attachments[0]->color = $task->task_status == HOSTING_TASK_SUCCESS? '#00cc00': '#cc0000';
+    $message_options->attachments[0]->fallback = t('Task Completed: !status', array(
+      '!status' => $status_text,
+    ));
+    $message_options->attachments[0]->title = $task->title;
+    $message_options->attachments[0]->text = $message_text;
 
-    slack_send_message($message_text, $message_options);
+    $message_options->attachments[0]->title_link= url("node/$task->nid", array('absolute' => TRUE));
+    $message_options->attachments[0]->color = hosting_task_color($status);
+
+    slack_send_message('', $message_options);
   }
+}
+
+function hosting_task_color($task_status) {
+    $colors = array(
+      HOSTING_TASK_SUCCESS => '#5cb85c',
+      HOSTING_TASK_QUEUED => '#777',
+      HOSTING_TASK_ERROR => '#d9534f',
+      HOSTING_TASK_PROCESSING => '#aaa',
+      HOSTING_TASK_WARNING => '#f0ad4e',
+    );
+    return $colors[$task_status];
 }
