@@ -17,16 +17,14 @@ function drush_hosting_slack_pre_hosting_task() {
 
   if ($triggers['start']) {
 
-    $message_text =  t('Task Started: <!url|!title>', array(
-      '!title' => $task->title,
-      '!url' => url("node/$task->nid", array('absolute' => TRUE)),
-    ));
     $message_options = new stdClass();
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
-    $message_options->attachments[0]->fallback = 'TASK OPTIONS GO HERE?';
-    $message_options->attachments[0]->color = '#777';
-    $message_options->attachments[0]->fields = array();
+    $message_options->attachments[0]->fallback = t('Task Started.');
+    $message_options->attachments[0]->title = $task->title;
+    $message_options->attachments[0]->title_link= url("node/$task->nid", array('absolute' => TRUE));
+    $message_options->attachments[0]->text =  t('Task Started.');
+    $message_options->attachments[0]->color = hosting_task_color($task->task_status);
 
     // Render task args as slackbot "fields"
     foreach ($task->task_args as $name => $value) {
@@ -45,8 +43,7 @@ function drush_hosting_slack_pre_hosting_task() {
 
       $message_options->attachments[0]->fields[] = $field;
     }
-
-    slack_send_message($message_text, $message_options);
+    slack_send_message('', $message_options);
   }
 }
 
@@ -63,7 +60,6 @@ function hosting_slack_hosting_task_update_status($task, $status) {
 
   $triggers = array_filter(variable_get('slack_hosting_tasks_triggers', array()));
   if ($triggers['stop']) {
-    $color = hosting_task_color($status);
     $status_text = _hosting_parse_error_code($status);
     $message_text =  t('Task Completed: !status', array(
       '!status' => "`{$status_text}`",
