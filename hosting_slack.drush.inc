@@ -17,13 +17,14 @@ function drush_hosting_slack_pre_hosting_task() {
 
   if ($triggers['start']) {
 
+    $message = t('Task Started: %date', array('%date' => format_date($task->executed)));
     $message_options = new stdClass();
     $message_options->attachments = array();
     $message_options->attachments[0] = new stdClass();
-    $message_options->attachments[0]->fallback = t('Task Started.');
+    $message_options->attachments[0]->fallback = $message;
     $message_options->attachments[0]->title = $task->title;
     $message_options->attachments[0]->title_link= url("node/$task->nid", array('absolute' => TRUE));
-    $message_options->attachments[0]->text =  t('Task Started.');
+    $message_options->attachments[0]->text = $message;
     $message_options->attachments[0]->color = hosting_task_color($task->task_status);
 
     // Render task args as slackbot "fields"
