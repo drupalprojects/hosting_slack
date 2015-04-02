@@ -86,6 +86,13 @@ function hosting_slack_hosting_task_update_status($task, $status) {
 
     $message_options->attachments[0]->title_link= url("node/$task->nid", array('absolute' => TRUE));
     $message_options->attachments[0]->color = hosting_task_color($status);
+    
+    // Site Link
+    if ($task->ref->type == 'site') {
+       $message_options->attachments[0]->text .= ' http://' . $task->ref->title;
+    }
+    
+    $message_options->task = $task;
 
     $field = new stdClass();
     $field->title = 'Duration';
